@@ -123,6 +123,10 @@ export default function DepartmentDetailPage() {
     )
   }
 
+  const handleMessageClick = () => {
+    router.push(`/messages?department=${department.slug}`);
+  };
+
   return (
     <div className="flex flex-col gap-8">
         <div>
@@ -154,7 +158,7 @@ export default function DepartmentDetailPage() {
                         <span className="text-muted-foreground">{department.phone}</span>
                     </div>
                 </div>
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => router.push('/messages')}>
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={handleMessageClick}>
                     Message Department
                 </Button>
             </CardContent>

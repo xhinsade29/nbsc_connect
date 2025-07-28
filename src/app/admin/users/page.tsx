@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, User, Mail, Book, Shield, Trash2, KeyRound } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, User, Mail, Book, Shield, Trash2, KeyRound, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -44,6 +44,7 @@ export default function AdminUsersPage() {
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [confirmAction, setConfirmAction] = useState<'deactivate' | 'reset' | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     
     const handleAddStudent = () => {
         setSelectedUser(null);
@@ -52,9 +53,13 @@ export default function AdminUsersPage() {
 
     const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsSubmitting(true);
         // In a real app, this would submit to a backend
-        toast({ title: "Student Added", description: "The new student account has been created." });
-        setIsFormOpen(false);
+        setTimeout(() => {
+            toast({ title: "Student Added", description: "The new student account has been created." });
+            setIsFormOpen(false);
+            setIsSubmitting(false);
+        }, 1000);
     };
 
     const handleViewProfile = (user: User) => {
@@ -71,16 +76,22 @@ export default function AdminUsersPage() {
     const executeConfirmedAction = () => {
         if (!selectedUser || !confirmAction) return;
 
-        if (confirmAction === 'deactivate') {
-            setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'Inactive' } : u));
-            toast({ title: "User Deactivated", variant: "destructive", description: `${selectedUser.name}'s account has been deactivated.` });
-        } else if (confirmAction === 'reset') {
-            toast({ title: "Password Reset Sent", description: `A password reset link has been sent to ${selectedUser.email}.` });
-        }
+        setIsSubmitting(true);
 
-        setIsConfirmOpen(false);
-        setSelectedUser(null);
-        setConfirmAction(null);
+        // Simulate async action
+        setTimeout(() => {
+            if (confirmAction === 'deactivate') {
+                setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'Inactive' } : u));
+                toast({ title: "User Deactivated", variant: "destructive", description: `${selectedUser.name}'s account has been deactivated.` });
+            } else if (confirmAction === 'reset') {
+                toast({ title: "Password Reset Sent", description: `A password reset link has been sent to ${selectedUser.email}.` });
+            }
+            
+            setIsSubmitting(false);
+            setIsConfirmOpen(false);
+            setSelectedUser(null);
+            setConfirmAction(null);
+        }, 1000);
     };
 
 
@@ -177,8 +188,11 @@ export default function AdminUsersPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                        <Button type="submit">Add Student</Button>
+                        <DialogClose asChild><Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Add Student
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -226,8 +240,9 @@ export default function AdminUsersPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="secondary">Cancel</Button></DialogClose>
-                    <Button variant={confirmAction === 'deactivate' ? "destructive" : "default"} onClick={executeConfirmedAction}>
+                    <DialogClose asChild><Button variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                    <Button variant={confirmAction === 'deactivate' ? "destructive" : "default"} onClick={executeConfirmedAction} disabled={isSubmitting}>
+                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {confirmAction === 'deactivate' ? 'Deactivate Account' : 'Send Reset Link'}
                     </Button>
                 </DialogFooter>

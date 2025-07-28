@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Trash2, Edit, View } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Trash2, Edit, View, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -36,6 +36,7 @@ export default function AdminAnnouncementsPage() {
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         const unsubscribeAnnouncements = subscribeToAnnouncements(setAnnouncements);
@@ -66,6 +67,7 @@ export default function AdminAnnouncementsPage() {
 
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsSubmitting(true);
         const formData = new FormData(e.currentTarget);
         const announcementData = {
             title: formData.get('title') as string,
@@ -88,6 +90,8 @@ export default function AdminAnnouncementsPage() {
             setSelectedAnnouncement(null);
         } catch (error) {
             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -108,6 +112,7 @@ export default function AdminAnnouncementsPage() {
     
     const handleDeleteConfirm = async () => {
         if (selectedAnnouncement) {
+            setIsSubmitting(true);
             try {
                 await deleteAnnouncement(selectedAnnouncement.id, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
@@ -115,6 +120,8 @@ export default function AdminAnnouncementsPage() {
                 setSelectedAnnouncement(null);
             } catch (error) {
                  toast({ title: "Error", description: "Could not delete announcement.", variant: "destructive" });
+            } finally {
+                setIsSubmitting(false);
             }
         }
     };
@@ -230,8 +237,11 @@ export default function AdminAnnouncementsPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                        <Button type="submit">Save Announcement</Button>
+                        <DialogClose asChild><Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Announcement
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -274,8 +284,11 @@ export default function AdminAnnouncementsPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="secondary">Cancel</Button></DialogClose>
-                    <Button variant="destructive" onClick={handleDeleteConfirm}>Delete</Button>
+                    <DialogClose asChild><Button variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                    <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Delete
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

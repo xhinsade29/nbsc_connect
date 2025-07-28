@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, BookOpen, FileSignature, Laptop, HeartHandshake, Trash2, Edit } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, BookOpen, FileSignature, Laptop, HeartHandshake, Trash2, Edit, Loader2 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -43,6 +43,7 @@ export default function AdminDepartmentsPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
         seedDepartments(); // Seed initial data if collection is empty
@@ -52,6 +53,7 @@ export default function AdminDepartmentsPage() {
 
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setIsSubmitting(true);
         const formData = new FormData(e.currentTarget);
         const name = formData.get('name') as string;
         const newDepartmentData = {
@@ -75,6 +77,8 @@ export default function AdminDepartmentsPage() {
             setSelectedDepartment(null);
         } catch (error) {
             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -90,6 +94,7 @@ export default function AdminDepartmentsPage() {
 
     const handleDeleteConfirm = async () => {
         if (selectedDepartment) {
+            setIsSubmitting(true);
             try {
                 await deleteDepartment(selectedDepartment.id);
                 toast({ title: "Department Removed", variant: "destructive", description: "The department has been removed from the platform." });
@@ -97,6 +102,8 @@ export default function AdminDepartmentsPage() {
                 setSelectedDepartment(null);
             } catch (error) {
                 toast({ title: "Error", description: "Could not remove department.", variant: "destructive" });
+            } finally {
+                setIsSubmitting(false);
             }
         }
     };
@@ -190,8 +197,11 @@ export default function AdminDepartmentsPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                        <Button type="submit">Save Department</Button>
+                        <DialogClose asChild><Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Save Department
+                        </Button>
                     </DialogFooter>
                 </form>
             </DialogContent>
@@ -207,8 +217,11 @@ export default function AdminDepartmentsPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="secondary">Cancel</Button></DialogClose>
-                    <Button variant="destructive" onClick={handleDeleteConfirm}>Remove</Button>
+                    <DialogClose asChild><Button variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                    <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isSubmitting}>
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Remove
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

@@ -21,7 +21,7 @@ export default function MessagesPage() {
     const scrollAreaRef = useRef<React.ElementRef<'div'>>(null);
 
     useEffect(() => {
-        if (departmentSlug) {
+        if (departmentSlug && conversations.length > 0) {
             const convo = conversations.find(c => c.slug === departmentSlug);
             if (convo) {
                 setSelectedConvo(convo);

@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface Message {
     id: number;
@@ -83,9 +83,26 @@ const initialConversations: Conversation[] = [
 
 const MessagesContext = createContext<MessagesContextType | undefined>(undefined);
 
+const getInitialState = () => {
+    if (typeof window !== 'undefined') {
+        const storedConversations = localStorage.getItem('conversations');
+        if (storedConversations) {
+            return JSON.parse(storedConversations);
+        }
+    }
+    return initialConversations;
+};
+
+
 export const MessagesProvider = ({ children }: { children: ReactNode }) => {
-    const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
+    const [conversations, setConversations] = useState<Conversation[]>(getInitialState);
     const [selectedConvo, setSelectedConvo] = useState<Conversation | null>(null);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('conversations', JSON.stringify(conversations));
+        }
+    }, [conversations]);
 
     const sendMessage = (convoId: number, text: string) => {
         const updatedConversations = conversations.map(convo => {
@@ -96,9 +113,13 @@ export const MessagesProvider = ({ children }: { children: ReactNode }) => {
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                     sender: 'You',
                 }];
-                const updatedConvo = { ...convo, messages: newMessages, lastMessage: text };
+                const updatedConvo = { 
+                    ...convo, 
+                    messages: newMessages, 
+                    lastMessage: text,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                };
                 
-                // Update selectedConvo if it's the one being modified
                 if (selectedConvo?.id === convoId) {
                     setSelectedConvo(updatedConvo);
                 }

@@ -70,9 +70,9 @@ export default function MessagesPage() {
                                 </div>
                                 <div className="text-right">
                                     <p className="text-xs text-muted-foreground">{convo.timestamp}</p>
-                                    {convo.unread > 0 && (
+                                    {convo.unreadStudent > 0 && (
                                         <div className="mt-1 w-5 h-5 bg-primary text-primary-foreground text-xs flex items-center justify-center rounded-full ml-auto">
-                                            {convo.unread}
+                                            {convo.unreadStudent}
                                         </div>
                                     )}
                                 </div>

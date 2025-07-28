@@ -64,7 +64,7 @@ export default function AdminDepartmentsPage() {
             description: formData.get('description') as string,
         };
 
-        const operation = async () => {
+        try {
             if (selectedDepartment) {
                 await updateDepartment(selectedDepartment.id, newDepartmentData);
                 toast({ title: "Department Updated", description: "The department details have been successfully updated." });
@@ -72,17 +72,13 @@ export default function AdminDepartmentsPage() {
                 await addDepartment(newDepartmentData);
                 toast({ title: "Department Created", description: "The new department has been added." });
             }
-        };
-
-        operation().catch(() => {
+        } catch (error) {
             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-        });
-        
-        setTimeout(() => {
+        } finally {
+            setIsSubmitting(false);
             setIsFormOpen(false);
             setSelectedDepartment(null);
-            setIsSubmitting(false);
-        }, 3000);
+        }
     };
 
     const handleEdit = (department: Department) => {
@@ -95,22 +91,19 @@ export default function AdminDepartmentsPage() {
         setIsDeleteConfirmOpen(true);
     };
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async () => {
         if (selectedDepartment) {
             setIsSubmitting(true);
-            const operation = async () => {
+            try {
                 await deleteDepartment(selectedDepartment.id);
                 toast({ title: "Department Removed", variant: "destructive", description: "The department has been removed from the platform." });
-            }
-            operation().catch(() => {
+            } catch (error) {
                 toast({ title: "Error", description: "Could not remove department.", variant: "destructive" });
-            });
-            
-            setTimeout(() => {
+            } finally {
+                setIsSubmitting(false);
                 setIsDeleteConfirmOpen(false);
                 setSelectedDepartment(null);
-                setIsSubmitting(false);
-            }, 3000);
+            }
         }
     };
 
@@ -203,7 +196,7 @@ export default function AdminDepartmentsPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                        <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>Cancel</Button>
                         <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Save Department
@@ -223,7 +216,7 @@ export default function AdminDepartmentsPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                    <Button variant="secondary" onClick={() => setIsDeleteConfirmOpen(false)} disabled={isSubmitting}>Cancel</Button>
                     <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Remove

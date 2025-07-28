@@ -77,7 +77,7 @@ export default function AdminAnnouncementsPage() {
             description: formData.get('description') as string,
         };
 
-        const operation = async () => {
+        try {
             if (selectedAnnouncement) {
                 await updateAnnouncement(selectedAnnouncement.id, announcementData, imageFile || undefined, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Updated", description: "The announcement has been successfully updated." });
@@ -85,17 +85,13 @@ export default function AdminAnnouncementsPage() {
                 await addAnnouncement(announcementData, imageFile || undefined);
                 toast({ title: "Announcement Created", description: "The new announcement has been posted." });
             }
-        };
-
-        operation().catch(() => {
+        } catch(err) {
              toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-        });
-        
-        setTimeout(() => {
+        } finally {
+            setIsSubmitting(false);
             setIsFormOpen(false);
             setSelectedAnnouncement(null);
-            setIsSubmitting(false);
-        }, 3000);
+        }
     };
 
     const handleEdit = (announcement: Announcement) => {
@@ -113,21 +109,19 @@ export default function AdminAnnouncementsPage() {
         setIsDeleteConfirmOpen(true);
     };
     
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async () => {
         if (selectedAnnouncement) {
             setIsSubmitting(true);
-            const operation = async () => {
+            try {
                 await deleteAnnouncement(selectedAnnouncement.id, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
-            }
-            operation().catch(() => {
+            } catch (err) {
                  toast({ title: "Error", description: "Could not delete announcement.", variant: "destructive" });
-            });
-            setTimeout(() => {
+            } finally {
+                setIsSubmitting(false);
                 setIsDeleteConfirmOpen(false);
                 setSelectedAnnouncement(null);
-                setIsSubmitting(false);
-            }, 3000);
+            }
         }
     };
 
@@ -242,7 +236,7 @@ export default function AdminAnnouncementsPage() {
                         </div>
                     </div>
                     <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                        <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)} disabled={isSubmitting}>Cancel</Button>
                         <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Save Announcement
@@ -289,7 +283,7 @@ export default function AdminAnnouncementsPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <DialogClose asChild><Button variant="secondary" disabled={isSubmitting}>Cancel</Button></DialogClose>
+                    <Button variant="secondary" onClick={() => setIsDeleteConfirmOpen(false)} disabled={isSubmitting}>Cancel</Button>
                     <Button variant="destructive" onClick={handleDeleteConfirm} disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Delete

@@ -7,6 +7,8 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge } fro
 import { LayoutDashboard, Building2, Bot, Bell, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
 
+// NOTE: In a real application, this state would be managed globally (e.g., via Context or Zustand)
+// to allow other components to update the notification counts.
 const initialLinks = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, notifications: 0 },
   { href: '/departments', label: 'Departments', icon: Building2, notifications: 0 },
@@ -20,6 +22,7 @@ export function SidebarNav() {
   const [links, setLinks] = useState(initialLinks);
 
   const handleLinkClick = (href: string) => {
+    // This is a local state update. For a real app, you'd trigger a global state update.
     const updatedLinks = links.map(link => {
       if (link.href === href) {
         return { ...link, notifications: 0 };

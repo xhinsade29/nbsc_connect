@@ -42,7 +42,7 @@ export const deleteDepartment = async (id: string) => {
 
 
 // Seed initial data
-export const seedDepartments = async () => {
+const seedDepartments = async () => {
     const departmentsCollection = collection(db, 'departments');
     const snapshot = await getDocs(query(departmentsCollection));
     
@@ -64,3 +64,6 @@ export const seedDepartments = async () => {
         console.log("Seeded initial departments.");
     }
 };
+
+// Seed data on initial load
+seedDepartments();

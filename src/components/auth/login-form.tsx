@@ -26,7 +26,7 @@ const formSchema = z.object({
   }),
 });
 
-export function LoginForm() {
+export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
     const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -41,7 +41,11 @@ export function LoginForm() {
     // This is where you would handle authentication logic.
     // For this scaffold, we'll just log the values and redirect.
     console.log("Login attempt with:", values);
-    router.push('/dashboard');
+    if (isAdmin) {
+        router.push('/admin/dashboard');
+    } else {
+        router.push('/dashboard');
+    }
   }
 
   return (
@@ -59,7 +63,7 @@ export function LoginForm() {
                         <FormItem>
                         <FormLabel>Institutional Email</FormLabel>
                         <FormControl>
-                            <Input placeholder="id.number@nbsc.edu.ph" {...field} />
+                            <Input placeholder={isAdmin ? "admin@nbsc.edu.ph" : "id.number@nbsc.edu.ph"} {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>

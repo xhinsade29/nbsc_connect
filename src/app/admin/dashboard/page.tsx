@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck } from 'lucide-react';
 
-export default function AdminPage() {
+export default function AdminDashboardPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>

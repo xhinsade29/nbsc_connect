@@ -72,11 +72,13 @@ export default function AdminDepartmentsPage() {
                 await addDepartment(newDepartmentData);
                 toast({ title: "Department Created", description: "The new department has been added." });
             }
-            setIsFormOpen(false);
-            setSelectedDepartment(null);
+            setTimeout(() => {
+                setIsFormOpen(false);
+                setSelectedDepartment(null);
+                setIsSubmitting(false);
+            }, 3000);
         } catch (error) {
             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -97,12 +99,14 @@ export default function AdminDepartmentsPage() {
             try {
                 await deleteDepartment(selectedDepartment.id);
                 toast({ title: "Department Removed", variant: "destructive", description: "The department has been removed from the platform." });
-                setIsDeleteConfirmOpen(false);
-                setSelectedDepartment(null);
             } catch (error) {
                 toast({ title: "Error", description: "Could not remove department.", variant: "destructive" });
             } finally {
-                setIsSubmitting(false);
+                 setTimeout(() => {
+                    setIsDeleteConfirmOpen(false);
+                    setSelectedDepartment(null);
+                    setIsSubmitting(false);
+                }, 3000);
             }
         }
     };

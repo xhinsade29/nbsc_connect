@@ -86,11 +86,13 @@ export default function AdminAnnouncementsPage() {
                 toast({ title: "Announcement Created", description: "The new announcement has been posted." });
             }
             
-            setIsFormOpen(false);
-            setSelectedAnnouncement(null);
+            setTimeout(() => {
+                setIsFormOpen(false);
+                setSelectedAnnouncement(null);
+                setIsSubmitting(false);
+            }, 3000);
         } catch (error) {
             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
-        } finally {
             setIsSubmitting(false);
         }
     };
@@ -116,12 +118,14 @@ export default function AdminAnnouncementsPage() {
             try {
                 await deleteAnnouncement(selectedAnnouncement.id, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
-                setIsDeleteConfirmOpen(false);
-                setSelectedAnnouncement(null);
             } catch (error) {
                  toast({ title: "Error", description: "Could not delete announcement.", variant: "destructive" });
             } finally {
-                setIsSubmitting(false);
+                setTimeout(() => {
+                    setIsDeleteConfirmOpen(false);
+                    setSelectedAnnouncement(null);
+                    setIsSubmitting(false);
+                }, 3000);
             }
         }
     };

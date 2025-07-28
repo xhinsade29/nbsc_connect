@@ -59,7 +59,7 @@ export default function AdminUsersPage() {
             toast({ title: "Student Added", description: "The new student account has been created." });
             setIsFormOpen(false);
             setIsSubmitting(false);
-        }, 1000);
+        }, 3000);
     };
 
     const handleViewProfile = (user: User) => {
@@ -91,7 +91,7 @@ export default function AdminUsersPage() {
             setIsConfirmOpen(false);
             setSelectedUser(null);
             setConfirmAction(null);
-        }, 1000);
+        }, 3000);
     };
 
 

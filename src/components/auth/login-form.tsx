@@ -56,7 +56,15 @@ export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
             });
         }
     } else {
-        router.push('/dashboard');
+         if (values.email.endsWith('@nbsc.edu.ph')) {
+             router.push('/dashboard');
+         } else {
+             toast({
+                title: "Invalid Email",
+                description: "Please use your institutional email (@nbsc.edu.ph).",
+                variant: "destructive",
+            });
+         }
     }
   }
 

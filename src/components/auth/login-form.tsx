@@ -17,9 +17,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-const formSchema = z.object({
+const createFormSchema = (isAdmin: boolean) => z.object({
   email: z.string().email({
-    message: "Please enter a valid institutional email.",
+    message: "Please enter a valid email address.",
+  }).refine(email => isAdmin || email.endsWith('@nbsc.edu.ph'), {
+    message: "Please use your institutional email (@nbsc.edu.ph).",
   }),
   password: z.string().min(6, {
     message: "Password must be at least 6 characters.",
@@ -28,6 +30,7 @@ const formSchema = z.object({
 
 export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
     const router = useRouter();
+    const formSchema = createFormSchema(isAdmin);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -153,8 +154,8 @@ export default function DepartmentDetailPage() {
                         <span className="text-muted-foreground">{department.phone}</span>
                     </div>
                 </div>
-                <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => router.push('/inquiry')}>
-                    Send Inquiry
+                <Button className="bg-accent text-accent-foreground hover:bg-accent/90" onClick={() => router.push('/messages')}>
+                    Message Department
                 </Button>
             </CardContent>
         </Card>

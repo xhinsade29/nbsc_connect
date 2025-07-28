@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Check, X, MoreHorizontal, Bot, Edit, RotateCcw } from 'lucide-react';
@@ -20,22 +20,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-type Status = 'Pending' | 'Approved' | 'Rejected';
-interface Inquiry {
-    id: number;
-    query: string;
-    recommended: string;
-    confidence: number;
-    status: Status;
-}
-
-const initialInquiries: Inquiry[] = [
-    { id: 1, query: "I forgot my password, how do I reset it?", recommended: "IT Services", confidence: 0.95, status: 'Pending' },
-    { id: 2, query: "What are the requirements for shifting courses?", recommended: "Academics Office", confidence: 0.88, status: 'Approved' },
-    { id: 3, query: "Is there a penalty for late enrollment?", recommended: "Registrar's Office", confidence: 0.92, status: 'Rejected' },
-    { id: 4, query: "How can I apply for a scholarship?", recommended: "Student Affairs", confidence: 0.85, status: 'Pending' },
-];
+import { Inquiry, InquiryStatus, subscribeToInquiries, updateInquiryStatus, reassignInquiry, seedInquiries } from '@/services/inquiries';
 
 const departments = [
   'Academics Office',
@@ -46,16 +31,33 @@ const departments = [
 
 export default function AdminInquiriesPage() {
     const { toast } = useToast();
-    const [inquiries, setInquiries] = useState<Inquiry[]>(initialInquiries);
+    const [inquiries, setInquiries] = useState<Inquiry[]>([]);
     const [isReassignOpen, setIsReassignOpen] = useState(false);
     const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
-    const handleStatusChange = (id: number, status: Status) => {
-        setInquiries(inquiries.map(inq => inq.id === id ? { ...inq, status } : inq));
-        toast({
-            title: `Inquiry ${status}`,
-            description: "The inquiry has been updated.",
-        });
+    useEffect(() => {
+        // This seeds the database with initial data if it's empty.
+        // It's safe to run multiple times as it uses setDoc with consistent IDs.
+        seedInquiries();
+
+        const unsubscribe = subscribeToInquiries(setInquiries);
+        return () => unsubscribe();
+    }, []);
+
+    const handleStatusChange = async (id: string, status: InquiryStatus) => {
+        try {
+            await updateInquiryStatus(id, status);
+            toast({
+                title: `Inquiry ${status}`,
+                description: "The inquiry has been updated.",
+            });
+        } catch (error) {
+            toast({
+                title: 'Error',
+                description: 'Failed to update inquiry status.',
+                variant: 'destructive',
+            });
+        }
     };
 
     const handleReassignClick = (inquiry: Inquiry) => {
@@ -63,21 +65,27 @@ export default function AdminInquiriesPage() {
         setIsReassignOpen(true);
     };
 
-    const handleReassignSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleReassignSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const newDepartment = formData.get('department') as string;
 
         if (selectedInquiry && newDepartment) {
-            setInquiries(inquiries.map(inq => 
-                inq.id === selectedInquiry.id ? { ...inq, recommended: newDepartment, status: 'Approved' } : inq
-            ));
-            toast({
-                title: "Inquiry Re-assigned",
-                description: `Inquiry routed to ${newDepartment}.`
-            });
-            setIsReassignOpen(false);
-            setSelectedInquiry(null);
+            try {
+                await reassignInquiry(selectedInquiry.id, newDepartment);
+                 toast({
+                    title: "Inquiry Re-assigned",
+                    description: `Inquiry routed to ${newDepartment}.`
+                });
+                setIsReassignOpen(false);
+                setSelectedInquiry(null);
+            } catch (error) {
+                 toast({
+                    title: 'Error',
+                    description: 'Failed to re-assign inquiry.',
+                    variant: 'destructive',
+                });
+            }
         }
     };
 

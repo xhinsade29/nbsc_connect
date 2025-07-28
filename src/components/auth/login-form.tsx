@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,6 +17,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
 
 const createFormSchema = (isAdmin: boolean) => z.object({
   email: z.string().email({
@@ -30,6 +32,7 @@ const createFormSchema = (isAdmin: boolean) => z.object({
 
 export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
     const router = useRouter();
+    const { toast } = useToast();
     const formSchema = createFormSchema(isAdmin);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -41,11 +44,17 @@ export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // This is where you would handle authentication logic.
-    // For this scaffold, we'll just log the values and redirect.
     console.log("Login attempt with:", values);
     if (isAdmin) {
-        router.push('/admin/dashboard');
+        if (values.email === 'admin@nbsc.edu.ph' && values.password === 'admin123') {
+            router.push('/admin/dashboard');
+        } else {
+            toast({
+                title: "Invalid Credentials",
+                description: "The email or password you entered is incorrect.",
+                variant: "destructive",
+            });
+        }
     } else {
         router.push('/dashboard');
     }
@@ -64,7 +73,7 @@ export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
                     name="email"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Institutional Email</FormLabel>
+                        <FormLabel>{isAdmin ? 'Admin Email' : 'Institutional Email'}</FormLabel>
                         <FormControl>
                             <Input placeholder={isAdmin ? "admin@nbsc.edu.ph" : "id.number@nbsc.edu.ph"} {...field} />
                         </FormControl>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,13 +29,13 @@ export default function NotificationsPage() {
     }
   };
 
-  const unreadAnnouncements = notifications.announcements.filter(n => !n.read).length;
-  const unreadInquiries = notifications.inquiries.filter(n => !n.read).length;
+  const unreadAnnouncements = useMemo(() => notifications.announcements.filter(n => !n.read).length, [notifications.announcements]);
+  const unreadInquiries = useMemo(() => notifications.inquiries.filter(n => !n.read).length, [notifications.inquiries]);
 
-  const allNotifications = [
+  const allNotifications = useMemo(() => [
       ...notifications.announcements,
       ...notifications.inquiries
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // This is a mock sort, proper date parsing is needed for real usage
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()), [notifications]); // This is a mock sort, proper date parsing is needed for real usage
 
   return (
     <>

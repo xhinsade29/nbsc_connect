@@ -22,7 +22,7 @@ export function SidebarNav() {
   const { notifications } = useNotifications();
   const { conversations } = useMessages();
   
-  const notificationCount = notifications.announcements.filter(n => !n.read).length + notifications.inquiries.filter(n => !n.read).length;
+  const notificationCount = (notifications.announcements.filter(n => !n.read).length || 0) + (notifications.inquiries.filter(n => !n.read).length || 0);
   const messageCount = conversations.reduce((sum, convo) => sum + convo.unreadStudent, 0);
 
   const links = initialLinks.map(link => {

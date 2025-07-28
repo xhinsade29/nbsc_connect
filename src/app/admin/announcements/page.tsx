@@ -23,6 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { subscribeToAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, Announcement } from '@/services/announcements';
+import Image from 'next/image';
 
 const departments = [
   'Academics Office',
@@ -38,11 +39,31 @@ export default function AdminAnnouncementsPage() {
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = subscribeToAnnouncements(setAnnouncements);
         return () => unsubscribe();
     }, []);
+    
+    useEffect(() => {
+        if (selectedAnnouncement) {
+            setPreviewImage(selectedAnnouncement.image);
+        } else {
+            setPreviewImage(null);
+        }
+        setImageFile(null);
+    }, [selectedAnnouncement, isFormOpen]);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setImageFile(file);
+            setPreviewImage(URL.createObjectURL(file));
+        }
+    };
+
 
     const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -53,16 +74,14 @@ export default function AdminAnnouncementsPage() {
             department: formData.get('department') as string,
             date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
             description: formData.get('description') as string,
-            image: 'https://placehold.co/600x400.png', // Default image for now
-            dataAiHint: 'school event', // Default hint
         };
 
         try {
             if (selectedAnnouncement) {
-                await updateAnnouncement(selectedAnnouncement.id, announcementData);
+                await updateAnnouncement(selectedAnnouncement.id, announcementData, imageFile || undefined, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Updated", description: "The announcement has been successfully updated." });
             } else {
-                await addAnnouncement(announcementData);
+                await addAnnouncement(announcementData, imageFile || undefined);
                 toast({ title: "Announcement Created", description: "The new announcement has been posted." });
             }
             
@@ -91,7 +110,7 @@ export default function AdminAnnouncementsPage() {
     const handleDeleteConfirm = async () => {
         if (selectedAnnouncement) {
             try {
-                await deleteAnnouncement(selectedAnnouncement.id);
+                await deleteAnnouncement(selectedAnnouncement.id, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
                 setIsDeleteConfirmOpen(false);
                 setSelectedAnnouncement(null);
@@ -205,6 +224,11 @@ export default function AdminAnnouncementsPage() {
                             <Label htmlFor="description">Description</Label>
                             <Textarea id="description" name="description" defaultValue={selectedAnnouncement?.description} required />
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="image">Image</Label>
+                            <Input id="image" name="image" type="file" accept="image/*" onChange={handleFileChange} />
+                             {previewImage && <Image src={previewImage} alt="Preview" width={200} height={100} className="mt-2 rounded-md object-cover" />}
+                        </div>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
@@ -216,14 +240,23 @@ export default function AdminAnnouncementsPage() {
 
         {/* View Dialog */}
         <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>{selectedAnnouncement?.title}</DialogTitle>
                     <DialogDescription>
                         {selectedAnnouncement?.department} &bull; {selectedAnnouncement?.date}
                     </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
+                <div className="py-4 space-y-4">
+                    {selectedAnnouncement?.image && (
+                        <Image
+                            src={selectedAnnouncement.image}
+                            alt={selectedAnnouncement.title}
+                            width={600}
+                            height={400}
+                            className="rounded-lg object-cover"
+                        />
+                    )}
                     <p>{selectedAnnouncement?.description}</p>
                 </div>
                  <DialogFooter>

@@ -44,7 +44,6 @@ export function LoginForm({ isAdmin = false }: { isAdmin?: boolean }) {
   });
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Login attempt with:", values);
     if (isAdmin) {
         if (values.email === 'admin@nbsc.edu.ph' && values.password === 'admin123') {
             router.push('/admin/dashboard');

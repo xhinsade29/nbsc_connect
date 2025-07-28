@@ -18,7 +18,7 @@ export default function LoginPage() {
             Sign in with your institutional email to continue.
           </p>
         </div>
-        <LoginForm />
+        <LoginForm isAdmin={false} />
       </div>
     </div>
   );

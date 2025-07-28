@@ -54,17 +54,19 @@ export default function AdminUsersPage() {
             course: formData.get('course') as string,
         };
 
-        try {
+        const operation = async () => {
             await addUser(newUser);
             toast({ title: "Student Added", description: "The new student account has been created." });
-        } catch (error) {
-            toast({ title: "Error Adding Student", description: "Could not create the student account.", variant: "destructive" });
-        } finally {
-            setTimeout(() => {
-                setIsFormOpen(false);
-                setIsSubmitting(false);
-            }, 3000);
-        }
+        };
+
+        operation().catch(() => {
+             toast({ title: "Error Adding Student", description: "Could not create the student account.", variant: "destructive" });
+        });
+        
+        setTimeout(() => {
+            setIsFormOpen(false);
+            setIsSubmitting(false);
+        }, 3000);
     };
 
     const handleViewProfile = (user: UserData) => {
@@ -78,12 +80,12 @@ export default function AdminUsersPage() {
         setIsConfirmOpen(true);
     };
 
-    const executeConfirmedAction = async () => {
+    const executeConfirmedAction = () => {
         if (!selectedUser || !confirmAction) return;
 
         setIsSubmitting(true);
-
-        try {
+        
+        const operation = async () => {
             if (confirmAction === 'deactivate') {
                 await updateUser(selectedUser.id, { status: 'Inactive' });
                 toast({ title: "User Deactivated", variant: "destructive", description: `${selectedUser.name}'s account has been deactivated.` });
@@ -91,16 +93,18 @@ export default function AdminUsersPage() {
                  // This is still a mock for now, as it involves email sending logic.
                 toast({ title: "Password Reset Sent", description: `A password reset link has been sent to ${selectedUser.email}.` });
             }
-        } catch (error) {
+        };
+
+        operation().catch(() => {
              toast({ title: "Error", description: "Could not complete the action.", variant: "destructive" });
-        } finally {
-            setTimeout(() => {
-                setIsConfirmOpen(false);
-                setSelectedUser(null);
-                setConfirmAction(null);
-                setIsSubmitting(false);
-            }, 3000);
-        }
+        });
+
+        setTimeout(() => {
+            setIsConfirmOpen(false);
+            setSelectedUser(null);
+            setConfirmAction(null);
+            setIsSubmitting(false);
+        }, 3000);
     };
 
 

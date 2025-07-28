@@ -77,7 +77,7 @@ export default function AdminAnnouncementsPage() {
             description: formData.get('description') as string,
         };
 
-        try {
+        const operation = async () => {
             if (selectedAnnouncement) {
                 await updateAnnouncement(selectedAnnouncement.id, announcementData, imageFile || undefined, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Updated", description: "The announcement has been successfully updated." });
@@ -85,16 +85,17 @@ export default function AdminAnnouncementsPage() {
                 await addAnnouncement(announcementData, imageFile || undefined);
                 toast({ title: "Announcement Created", description: "The new announcement has been posted." });
             }
-            
-            setTimeout(() => {
-                setIsFormOpen(false);
-                setSelectedAnnouncement(null);
-                setIsSubmitting(false);
-            }, 3000);
-        } catch (error) {
-            toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
+        };
+
+        operation().catch(() => {
+             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
+        });
+        
+        setTimeout(() => {
+            setIsFormOpen(false);
+            setSelectedAnnouncement(null);
             setIsSubmitting(false);
-        }
+        }, 3000);
     };
 
     const handleEdit = (announcement: Announcement) => {
@@ -112,21 +113,21 @@ export default function AdminAnnouncementsPage() {
         setIsDeleteConfirmOpen(true);
     };
     
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = () => {
         if (selectedAnnouncement) {
             setIsSubmitting(true);
-            try {
+            const operation = async () => {
                 await deleteAnnouncement(selectedAnnouncement.id, selectedAnnouncement.imagePath);
                 toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
-            } catch (error) {
-                 toast({ title: "Error", description: "Could not delete announcement.", variant: "destructive" });
-            } finally {
-                setTimeout(() => {
-                    setIsDeleteConfirmOpen(false);
-                    setSelectedAnnouncement(null);
-                    setIsSubmitting(false);
-                }, 3000);
             }
+            operation().catch(() => {
+                 toast({ title: "Error", description: "Could not delete announcement.", variant: "destructive" });
+            });
+            setTimeout(() => {
+                setIsDeleteConfirmOpen(false);
+                setSelectedAnnouncement(null);
+                setIsSubmitting(false);
+            }, 3000);
         }
     };
 

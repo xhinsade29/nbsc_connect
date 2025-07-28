@@ -64,7 +64,7 @@ export default function AdminDepartmentsPage() {
             description: formData.get('description') as string,
         };
 
-        try {
+        const operation = async () => {
             if (selectedDepartment) {
                 await updateDepartment(selectedDepartment.id, newDepartmentData);
                 toast({ title: "Department Updated", description: "The department details have been successfully updated." });
@@ -72,15 +72,17 @@ export default function AdminDepartmentsPage() {
                 await addDepartment(newDepartmentData);
                 toast({ title: "Department Created", description: "The new department has been added." });
             }
-            setTimeout(() => {
-                setIsFormOpen(false);
-                setSelectedDepartment(null);
-                setIsSubmitting(false);
-            }, 3000);
-        } catch (error) {
+        };
+
+        operation().catch(() => {
             toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
+        });
+        
+        setTimeout(() => {
+            setIsFormOpen(false);
+            setSelectedDepartment(null);
             setIsSubmitting(false);
-        }
+        }, 3000);
     };
 
     const handleEdit = (department: Department) => {
@@ -93,21 +95,22 @@ export default function AdminDepartmentsPage() {
         setIsDeleteConfirmOpen(true);
     };
 
-    const handleDeleteConfirm = async () => {
+    const handleDeleteConfirm = () => {
         if (selectedDepartment) {
             setIsSubmitting(true);
-            try {
+            const operation = async () => {
                 await deleteDepartment(selectedDepartment.id);
                 toast({ title: "Department Removed", variant: "destructive", description: "The department has been removed from the platform." });
-            } catch (error) {
-                toast({ title: "Error", description: "Could not remove department.", variant: "destructive" });
-            } finally {
-                 setTimeout(() => {
-                    setIsDeleteConfirmOpen(false);
-                    setSelectedDepartment(null);
-                    setIsSubmitting(false);
-                }, 3000);
             }
+            operation().catch(() => {
+                toast({ title: "Error", description: "Could not remove department.", variant: "destructive" });
+            });
+            
+            setTimeout(() => {
+                setIsDeleteConfirmOpen(false);
+                setSelectedDepartment(null);
+                setIsSubmitting(false);
+            }, 3000);
         }
     };
 

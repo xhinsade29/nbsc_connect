@@ -52,28 +52,4 @@ export default function AdminDashboardPage() {
           <CardContent>
             <div className="text-2xl font-bold">12</div>
             <p className="text-xs text-muted-foreground">Needs administrative action</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="font-headline text-2xl">Quick Actions</CardTitle>
-          <CardDescription>Perform common administrative tasks from here.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Button>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Create Announcement
-          </Button>
-          <Button variant="secondary">
-            Manage Users
-          </Button>
-           <Button variant="secondary">
-            System Health
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+          </C

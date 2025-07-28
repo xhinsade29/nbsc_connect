@@ -1,6 +1,8 @@
 
 'use client';
 
+import { useState } from "react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,8 +10,41 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Bell, Lock, Palette } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+
+const THEME_COLORS = [
+    { name: 'Default', bgClass: 'bg-primary', color: '275 100% 25%' },
+    { name: 'Red', bgClass: 'bg-red-500', color: '0 84% 60%' },
+    { name: 'Green', bgClass: 'bg-green-500', color: '142 76% 36%' },
+    { name: 'Blue', bgClass: 'bg-blue-500', color: '221 83% 53%' },
+    { name: 'Yellow', bgClass: 'bg-yellow-500', color: '48 96% 53%' },
+];
 
 export default function SettingsPage() {
+    const { toast } = useToast();
+    const { theme, setTheme } = useTheme();
+    const [selectedThemeColor, setSelectedThemeColor] = useState(THEME_COLORS[0].color);
+
+    const handleUpdatePassword = () => {
+        toast({
+            title: "Password Updated",
+            description: "Your password has been changed successfully.",
+        });
+    }
+
+    const handleSavePreferences = () => {
+        toast({
+            title: "Preferences Saved",
+            description: "Your notification settings have been updated.",
+        });
+    }
+
+    const handleThemeColorChange = (color: string) => {
+        setSelectedThemeColor(color);
+        document.documentElement.style.setProperty('--primary', color);
+    }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -41,7 +76,7 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
                 <CardFooter>
-                    <Button>Update Password</Button>
+                    <Button onClick={handleUpdatePassword}>Update Password</Button>
                 </CardFooter>
             </Card>
              <Card>
@@ -76,8 +111,8 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
                  <CardFooter>
-                    <Button>Save Preferences</Button>
-                </CardFooter>
+                    <Button onClick={handleSavePreferences}>Save Preferences</Button>
+                 </CardFooter>
             </Card>
         </div>
         <div className="lg:col-span-1">
@@ -92,16 +127,28 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                         <Label htmlFor="dark-mode">Dark Mode</Label>
-                        <Switch id="dark-mode" />
+                        <Switch 
+                            id="dark-mode" 
+                            checked={theme === 'dark'}
+                            onCheckedChange={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        />
                     </div>
                     <Separator />
                     <p className="text-sm font-medium">Theme Color</p>
                     <div className="grid grid-cols-5 gap-2">
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-primary ring-2 ring-ring"></Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-red-500"></Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-green-500"></Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-blue-500"></Button>
-                        <Button variant="outline" size="icon" className="h-8 w-8 bg-yellow-500"></Button>
+                       {THEME_COLORS.map(color => (
+                            <Button 
+                                key={color.name}
+                                variant="outline" 
+                                size="icon" 
+                                className={cn(
+                                    "h-8 w-8",
+                                    color.bgClass,
+                                    selectedThemeColor === color.color && "ring-2 ring-ring"
+                                )}
+                                onClick={() => handleThemeColorChange(color.color)}
+                            />
+                       ))}
                     </div>
                 </CardContent>
             </Card>

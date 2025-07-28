@@ -1,14 +1,40 @@
 
 'use client';
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, Mail, Shield, Book, Calendar } from "lucide-react";
+import { User, Mail, Book, Calendar } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
+    const { toast } = useToast();
+    const [fullName, setFullName] = useState("Student Name");
+    const [initialFullName, setInitialFullName] = useState("Student Name");
+
+    const handleSaveChanges = () => {
+        setInitialFullName(fullName);
+        toast({
+            title: "Profile Updated",
+            description: "Your changes have been saved successfully.",
+        });
+    };
+
+    const handleCancel = () => {
+        setFullName(initialFullName);
+    };
+
+    const handlePictureChange = () => {
+        toast({
+            title: "Feature not available",
+            description: "Changing profile picture is not yet implemented.",
+            variant: "destructive"
+        })
+    }
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -23,9 +49,11 @@ export default function ProfilePage() {
               <AvatarFallback>SN</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="font-headline text-2xl">Student Name</CardTitle>
+              <CardTitle className="font-headline text-2xl">{initialFullName}</CardTitle>
               <CardDescription>ID: 2021-00123</CardDescription>
-              <Button variant="outline" size="sm" className="mt-4">Change Picture</Button>
+              <Button variant="outline" size="sm" className="mt-4" onClick={handlePictureChange}>
+                Change Picture
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -36,7 +64,12 @@ export default function ProfilePage() {
                     <Label htmlFor="name">Full Name</Label>
                     <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input id="name" defaultValue="Student Name" className="pl-10" />
+                        <Input 
+                            id="name" 
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            className="pl-10" 
+                        />
                     </div>
                 </div>
                  <div className="space-y-2">
@@ -65,8 +98,8 @@ export default function ProfilePage() {
                 </div>
             </div>
             <div className="md:col-span-2 flex justify-end gap-2">
-                <Button variant="ghost">Cancel</Button>
-                <Button>Save Changes</Button>
+                <Button variant="ghost" onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleSaveChanges}>Save Changes</Button>
             </div>
         </CardContent>
       </Card>

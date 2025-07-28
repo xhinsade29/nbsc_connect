@@ -8,6 +8,7 @@ export interface UserData {
     email: string;
     course: string;
     status: 'Active' | 'Inactive';
+    notified?: boolean; // To track if admin has been notified
 }
 
 // Subscribe to real-time updates of users
@@ -34,6 +35,7 @@ export const addUser = async (user: Omit<UserData, 'id' | 'status'>) => {
         ...user,
         status: 'Active',
         createdAt: serverTimestamp(),
+        notified: false, // For new user notification
     });
 };
 
@@ -51,9 +53,9 @@ const seedUsers = async () => {
     
     if (snapshot.empty) {
         const initialUsers: Omit<UserData, 'id'>[] = [
-            { name: 'Juan Dela Cruz', email: 'juan.delacruz@nbsc.edu.ph', course: 'BS in Information Technology', status: 'Active' },
-            { name: 'Maria Clara', email: 'maria.clara@nbsc.edu.ph', course: 'BS in Business Administration', status: 'Active' },
-            { name: 'Jose Rizal', email: 'jose.rizal@nbsc.edu.ph', course: 'BS in Education', status: 'Inactive' },
+            { name: 'Juan Dela Cruz', email: 'juan.delacruz@nbsc.edu.ph', course: 'BS in Information Technology', status: 'Active', notified: true },
+            { name: 'Maria Clara', email: 'maria.clara@nbsc.edu.ph', course: 'BS in Business Administration', status: 'Active', notified: true },
+            { name: 'Jose Rizal', email: 'jose.rizal@nbsc.edu.ph', course: 'BS in Education', status: 'Inactive', notified: true },
         ];
 
         const batch = writeBatch(db);

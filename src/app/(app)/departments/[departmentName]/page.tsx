@@ -73,7 +73,7 @@ export default function DepartmentDetailPage() {
         <div>
             <Button variant="ghost" onClick={() => router.back()} className="mb-4">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Departments
+                Back to all pages
             </Button>
             <div className="flex items-center gap-4">
                 <DepartmentIcon iconName={department.icon} className="h-10 w-10 text-primary" />

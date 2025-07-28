@@ -1,6 +1,6 @@
 
 import { db } from '@/lib/firebase';
-import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, updateDoc } from 'firebase/firestore';
+import { collection, doc, onSnapshot, addDoc, serverTimestamp, query, orderBy, updateDoc, writeBatch, getDocs, where } from 'firebase/firestore';
 import type { Conversation, Message } from '@/context/admin-messages-context';
 
 // Note: In a real-world app, you'd have more robust error handling and user authentication checks.
@@ -78,3 +78,39 @@ export const markAsReadInFirestore = async (conversationId: string, userType: 's
         await updateDoc(conversationRef, { unread: 0 });
     }
 };
+
+const seedMessages = async () => {
+    const conversationsCollection = collection(db, 'conversations');
+    const snapshot = await getDocs(query(conversationsCollection));
+
+    if (snapshot.empty) {
+        const batch = writeBatch(db);
+        const conversationsData = [
+            { id: 'academics-office', name: 'Academics Office', slug: 'academics-office', studentName: 'Maria Clara', studentId: 'maria.clara@nbsc.edu.ph', avatar: 'https://placehold.co/100x100.png', dataAiHint: 'building book' },
+            { id: 'registrars-office', name: 'Registrar\'s Office', slug: 'registrars-office', studentName: 'Juan Dela Cruz', studentId: 'juan.delacruz@nbsc.edu.ph', avatar: 'https://placehold.co/100x100.png', dataAiHint: 'building file' },
+        ];
+        
+        for (const convoData of conversationsData) {
+            const convoRef = doc(conversationsCollection, convoData.id);
+            batch.set(convoRef, {
+                ...convoData,
+                lastMessage: 'Hello, I have a question.',
+                timestamp: serverTimestamp(),
+                unread: 1,
+                unreadStudent: 0,
+            });
+
+            const messagesRef = collection(convoRef, 'messages');
+            batch.set(doc(messagesRef), {
+                sender: 'You',
+                text: 'Hello, I have a question.',
+                timestamp: serverTimestamp(),
+            });
+        }
+
+        await batch.commit();
+        console.log("Seeded initial conversations and messages.");
+    }
+};
+
+seedMessages();

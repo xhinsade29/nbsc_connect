@@ -60,7 +60,11 @@ export const AdminMessagesProvider = ({ children }: { children: ReactNode }) => 
     const handleSetSelectedConvo = (convo: Conversation | null) => {
         if (convo) {
             markAsReadInFirestore(convo.id, 'admin');
-            setSelectedConvo({ ...convo, unread: 0 });
+            const updatedConvo = { ...convo, unread: 0 };
+            setSelectedConvo(updatedConvo);
+             // Also update the list
+            setConversations(prev => prev.map(c => c.id === convo.id ? updatedConvo : c));
+
         } else {
             setSelectedConvo(null);
         }
@@ -69,11 +73,9 @@ export const AdminMessagesProvider = ({ children }: { children: ReactNode }) => 
 
     const handleSendMessage = async (convoId: string, text: string, sender: 'Admin' | string) => {
        await sendMessageToFirestore(convoId, { text, sender });
-       // Optimistic update for unread count, Firestore will handle the rest
-       const convoRef = doc(db, 'conversations', convoId);
        const currentConvo = conversations.find(c => c.id === convoId);
        if (currentConvo) {
-           await updateUnreadCount(convoId, 'admin', currentConvo.unreadStudent + 1);
+           await updateUnreadCount(convoId, 'student', currentConvo.unreadStudent + 1);
        }
     };
     

@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { Conversation as AdminConversation } from './admin-messages-context';
-import { subscribeToConversations, subscribeToMessages, sendMessageToFirestore, markAsReadInFirestore } from '@/services/messages';
+import { subscribeToConversations, subscribeToMessages, sendMessageToFirestore, markAsReadInFirestore, updateUnreadCount } from '@/services/messages';
 
 interface Message {
     id: string;
@@ -58,7 +58,10 @@ export const MessagesProvider = ({ children }: { children: ReactNode }) => {
     const handleSetSelectedConvo = (convo: Conversation | null) => {
         if (convo) {
             markAsReadInFirestore(convo.id, 'student');
-            setSelectedConvo({ ...convo, unreadStudent: 0 });
+            const updatedConvo = { ...convo, unreadStudent: 0 };
+            setSelectedConvo(updatedConvo);
+            setConversations(prev => prev.map(c => c.id === convo.id ? updatedConvo : c));
+
         } else {
             setSelectedConvo(null);
         }
@@ -66,11 +69,9 @@ export const MessagesProvider = ({ children }: { children: ReactNode }) => {
 
     const handleSendMessage = async (convoId: string, text: string) => {
         await sendMessageToFirestore(convoId, { text, sender: 'You' });
-        // Optimistic update for unread count, Firestore will handle the rest
-        const convoRef = doc(db, 'conversations', convoId);
         const currentConvo = conversations.find(c => c.id === convoId);
         if (currentConvo) {
-            await updateUnreadCount(convoId, 'student', currentConvo.unread + 1);
+            await updateUnreadCount(convoId, 'admin', currentConvo.unread + 1);
         }
     };
     

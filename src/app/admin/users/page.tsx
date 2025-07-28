@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, User, Mail, Book, Shield, Trash2, KeyRound, Loader2 } from 'lucide-react';
@@ -21,77 +21,86 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { subscribeToUsers, addUser, updateUser, UserData } from '@/services/users';
 
-interface User {
-    id: number;
-    name: string;
-    email: string;
-    course: string;
-    status: 'Active' | 'Inactive';
-}
-
-const initialUsers: User[] = [
-    { id: 1, name: 'Juan Dela Cruz', email: 'juan.delacruz@nbsc.edu.ph', course: 'BS in Information Technology', status: 'Active' },
-    { id: 2, name: 'Maria Clara', email: 'maria.clara@nbsc.edu.ph', course: 'BS in Business Administration', status: 'Active' },
-    { id: 3, name: 'Jose Rizal', email: 'jose.rizal@nbsc.edu.ph', course: 'BS in Education', status: 'Inactive' },
-];
 
 export default function AdminUsersPage() {
     const { toast } = useToast();
-    const [users, setUsers] = useState<User[]>(initialUsers);
+    const [users, setUsers] = useState<UserData[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
     const [confirmAction, setConfirmAction] = useState<'deactivate' | 'reset' | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
+    useEffect(() => {
+        const unsubscribe = subscribeToUsers(setUsers);
+        return () => unsubscribe();
+    }, []);
+
     const handleAddStudent = () => {
         setSelectedUser(null);
         setIsFormOpen(true);
     };
 
-    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // In a real app, this would submit to a backend
-        setTimeout(() => {
+        const formData = new FormData(e.currentTarget);
+        const newUser: Omit<UserData, 'id' | 'status'> = {
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            course: formData.get('course') as string,
+        };
+
+        try {
+            await addUser(newUser);
             toast({ title: "Student Added", description: "The new student account has been created." });
-            setIsFormOpen(false);
-            setIsSubmitting(false);
-        }, 3000);
+        } catch (error) {
+            toast({ title: "Error Adding Student", description: "Could not create the student account.", variant: "destructive" });
+        } finally {
+            setTimeout(() => {
+                setIsFormOpen(false);
+                setIsSubmitting(false);
+            }, 3000);
+        }
     };
 
-    const handleViewProfile = (user: User) => {
+    const handleViewProfile = (user: UserData) => {
         setSelectedUser(user);
         setIsViewOpen(true);
     };
 
-    const handleConfirmAction = (user: User, action: 'deactivate' | 'reset') => {
+    const handleConfirmAction = (user: UserData, action: 'deactivate' | 'reset') => {
         setSelectedUser(user);
         setConfirmAction(action);
         setIsConfirmOpen(true);
     };
 
-    const executeConfirmedAction = () => {
+    const executeConfirmedAction = async () => {
         if (!selectedUser || !confirmAction) return;
 
         setIsSubmitting(true);
 
-        // Simulate async action
-        setTimeout(() => {
+        try {
             if (confirmAction === 'deactivate') {
-                setUsers(users.map(u => u.id === selectedUser.id ? { ...u, status: 'Inactive' } : u));
+                await updateUser(selectedUser.id, { status: 'Inactive' });
                 toast({ title: "User Deactivated", variant: "destructive", description: `${selectedUser.name}'s account has been deactivated.` });
             } else if (confirmAction === 'reset') {
+                 // This is still a mock for now, as it involves email sending logic.
                 toast({ title: "Password Reset Sent", description: `A password reset link has been sent to ${selectedUser.email}.` });
             }
-            
-            setIsSubmitting(false);
-            setIsConfirmOpen(false);
-            setSelectedUser(null);
-            setConfirmAction(null);
-        }, 3000);
+        } catch (error) {
+             toast({ title: "Error", description: "Could not complete the action.", variant: "destructive" });
+        } finally {
+            setTimeout(() => {
+                setIsConfirmOpen(false);
+                setSelectedUser(null);
+                setConfirmAction(null);
+                setIsSubmitting(false);
+            }, 3000);
+        }
     };
 
 
@@ -154,7 +163,7 @@ export default function AdminUsersPage() {
                                         <DropdownMenuContent align="end">
                                             <DropdownMenuItem onClick={() => handleViewProfile(user)}><User className="mr-2 h-4 w-4" />View Profile</DropdownMenuItem>
                                             <DropdownMenuItem onClick={() => handleConfirmAction(user, 'reset')}><KeyRound className="mr-2 h-4 w-4" /> Reset Password</DropdownMenuItem>
-                                            <DropdownMenuItem className="text-destructive" onClick={() => handleConfirmAction(user, 'deactivate')}><Trash2 className="mr-2 h-4 w-4" />Deactivate</DropdownMenuItem>
+                                            {user.status === 'Active' && <DropdownMenuItem className="text-destructive" onClick={() => handleConfirmAction(user, 'deactivate')}><Trash2 className="mr-2 h-4 w-4" />Deactivate</DropdownMenuItem>}
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>

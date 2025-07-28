@@ -21,27 +21,27 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Inquiry, InquiryStatus, subscribeToInquiries, updateInquiryStatus, reassignInquiry, seedInquiries } from '@/services/inquiries';
+import { subscribeToDepartments, Department } from '@/services/departments';
 
-const departments = [
-  'Academics Office',
-  'Registrar\'s Office',
-  'IT Services',
-  'Student Affairs',
-];
 
 export default function AdminInquiriesPage() {
     const { toast } = useToast();
     const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [isReassignOpen, setIsReassignOpen] = useState(false);
     const [selectedInquiry, setSelectedInquiry] = useState<Inquiry | null>(null);
 
     useEffect(() => {
         // This seeds the database with initial data if it's empty.
-        // It's safe to run multiple times as it uses setDoc with consistent IDs.
         seedInquiries();
 
-        const unsubscribe = subscribeToInquiries(setInquiries);
-        return () => unsubscribe();
+        const unsubscribeInquiries = subscribeToInquiries(setInquiries);
+        const unsubscribeDepartments = subscribeToDepartments(setDepartments);
+
+        return () => {
+            unsubscribeInquiries();
+            unsubscribeDepartments();
+        };
     }, []);
 
     const handleStatusChange = async (id: string, status: InquiryStatus) => {
@@ -184,7 +184,7 @@ export default function AdminInquiriesPage() {
                                 <SelectValue placeholder="Select a department" />
                             </SelectTrigger>
                             <SelectContent>
-                                {departments.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                                {departments.map(dep => <SelectItem key={dep.id} value={dep.name}>{dep.name}</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>

@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,49 +9,30 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen, FileSignature, Laptop, HeartHandshake, Mail, Phone, ArrowRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { subscribeToDepartments, Department } from '@/services/departments';
 
-interface Department {
-  name: string;
-  slug: string;
-  Icon: LucideIcon;
-  email: string;
-  phone: string;
-}
+const ICONS: Record<string, LucideIcon> = {
+    BookOpen,
+    FileSignature,
+    Laptop,
+    HeartHandshake,
+};
 
-const departments: Department[] = [
-  {
-    name: 'Academics Office',
-    slug: 'academics-office',
-    Icon: BookOpen,
-    email: 'academics@nbsc.edu.ph',
-    phone: '(012) 345-6789',
-  },
-  {
-    name: 'Registrar\'s Office',
-    slug: 'registrars-office',
-    Icon: FileSignature,
-    email: 'registrar@nbsc.edu.ph',
-    phone: '(012) 345-6780',
-  },
-  {
-    name: 'IT Services',
-    slug: 'it-services',
-    Icon: Laptop,
-    email: 'itservices@nbsc.edu.ph',
-    phone: '(012) 345-6781',
-  },
-  {
-    name: 'Student Affairs',
-    slug: 'student-affairs',
-    Icon: HeartHandshake,
-    email: 'student.affairs@nbsc.edu.ph',
-    phone: '(012) 345-6782',
-  },
-];
+const DepartmentIcon = ({ iconName }: { iconName: string }) => {
+    const Icon = ICONS[iconName] || BookOpen;
+    return <Icon className="h-6 w-6 text-muted-foreground" />;
+};
+
 
 export default function DepartmentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortOrder, setSortOrder] = useState('name-asc');
+  const [departments, setDepartments] = useState<Department[]>([]);
+
+  useEffect(() => {
+      const unsubscribe = subscribeToDepartments(setDepartments);
+      return () => unsubscribe();
+  }, []);
 
   const filteredAndSortedDepartments = useMemo(() => {
     return departments
@@ -64,7 +46,7 @@ export default function DepartmentsPage() {
           return b.name.localeCompare(a.name);
         }
       });
-  }, [searchTerm, sortOrder]);
+  }, [searchTerm, sortOrder, departments]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -98,10 +80,10 @@ export default function DepartmentsPage() {
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {filteredAndSortedDepartments.map((dept) => (
-          <Card key={dept.name}>
+          <Card key={dept.id}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="font-headline text-lg font-medium">{dept.name}</CardTitle>
-              <dept.Icon className="h-6 w-6 text-muted-foreground" />
+              <DepartmentIcon iconName={dept.icon} />
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="space-y-2 text-sm">

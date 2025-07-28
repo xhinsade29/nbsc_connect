@@ -6,60 +6,20 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FileSignature, Laptop, HeartHandshake, Mail, Phone, ArrowRight, ArrowLeft, Megaphone, CalendarDays, GraduationCap, Building } from 'lucide-react';
+import { BookOpen, FileSignature, Laptop, HeartHandshake, Mail, Phone, ArrowRight, ArrowLeft, Megaphone, CalendarDays, GraduationCap, Building, LucideIcon as LucideIconType } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import Image from 'next/image';
 import { subscribeToAnnouncements, Announcement } from '@/services/announcements';
-
-
-interface Department {
-  name: string;
-  slug: string;
-  Icon: LucideIcon;
-  email: string;
-  phone: string;
-  description: string;
-}
-
-const departments: Department[] = [
-  {
-    name: 'Academics Office',
-    slug: 'academics-office',
-    Icon: BookOpen,
-    email: 'academics@nbsc.edu.ph',
-    phone: '(012) 345-6789',
-    description: 'The Academics Office is responsible for all academic programs, curriculum development, and faculty management.'
-  },
-  {
-    name: 'Registrar\'s Office',
-    slug: 'registrars-office',
-    Icon: FileSignature,
-    email: 'registrar@nbsc.edu.ph',
-    phone: '(012) 345-6780',
-    description: 'The Registrar\'s Office handles student records, registration, and issuance of official documents.'
-  },
-  {
-    name: 'IT Services',
-    slug: 'it-services',
-    Icon: Laptop,
-    email: 'itservices@nbsc.edu.ph',
-    phone: '(012) 345-6781',
-    description: 'IT Services provides technical support, manages the campus network, and oversees all information systems.'
-  },
-  {
-    name: 'Student Affairs',
-    slug: 'student-affairs',
-    Icon: HeartHandshake,
-    email: 'student.affairs@nbsc.edu.ph',
-    phone: '(012) 345-6782',
-    description: 'The Student Affairs office is dedicated to student welfare, activities, and development programs.'
-  },
-];
+import { subscribeToDepartments, Department } from '@/services/departments';
 
 const ICONS: { [key: string]: LucideIcon } = {
     Academics: GraduationCap,
     Event: CalendarDays,
     Announcement: Megaphone,
+    BookOpen,
+    FileSignature,
+    Laptop,
+    HeartHandshake,
     default: Megaphone,
 };
 
@@ -67,15 +27,25 @@ const getIcon = (category: string) => {
     return ICONS[category] || ICONS.default;
 }
 
+const DepartmentIcon = ({ iconName, ...props }: { iconName: string, className?: string }) => {
+    const Icon = ICONS[iconName] || BookOpen;
+    return <Icon {...props} />;
+};
+
 export default function DepartmentDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { departmentName } = params;
   const [allAnnouncements, setAllAnnouncements] = useState<Announcement[]>([]);
-
+  const [departments, setDepartments] = useState<Department[]>([]);
+  
   useEffect(() => {
-    const unsubscribe = subscribeToAnnouncements(setAllAnnouncements);
-    return () => unsubscribe();
+    const unsubscribeAnnouncements = subscribeToAnnouncements(setAllAnnouncements);
+    const unsubscribeDepartments = subscribeToDepartments(setDepartments);
+    return () => {
+        unsubscribeAnnouncements();
+        unsubscribeDepartments();
+    };
   }, []);
 
   const department = departments.find(d => d.slug === departmentName);
@@ -106,7 +76,7 @@ export default function DepartmentDetailPage() {
                 Back to Departments
             </Button>
             <div className="flex items-center gap-4">
-                <department.Icon className="h-10 w-10 text-primary" />
+                <DepartmentIcon iconName={department.icon} className="h-10 w-10 text-primary" />
                 <div>
                     <h1 className="font-headline text-3xl font-bold">{department.name}</h1>
                     <p className="text-muted-foreground">{department.description}</p>

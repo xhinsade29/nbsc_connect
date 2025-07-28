@@ -23,18 +23,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { subscribeToAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, Announcement } from '@/services/announcements';
+import { subscribeToDepartments, Department } from '@/services/departments';
 import Image from 'next/image';
-
-const departments = [
-  'Academics Office',
-  'Registrar\'s Office',
-  'IT Services',
-  'Student Affairs',
-];
 
 export default function AdminAnnouncementsPage() {
     const { toast } = useToast();
     const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -43,8 +38,12 @@ export default function AdminAnnouncementsPage() {
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
     useEffect(() => {
-        const unsubscribe = subscribeToAnnouncements(setAnnouncements);
-        return () => unsubscribe();
+        const unsubscribeAnnouncements = subscribeToAnnouncements(setAnnouncements);
+        const unsubscribeDepartments = subscribeToDepartments(setDepartments);
+        return () => {
+            unsubscribeAnnouncements();
+            unsubscribeDepartments();
+        };
     }, []);
     
     useEffect(() => {
@@ -216,7 +215,7 @@ export default function AdminAnnouncementsPage() {
                                     <SelectValue placeholder="Select a department" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {departments.map(dep => <SelectItem key={dep} value={dep}>{dep}</SelectItem>)}
+                                    {departments.map(dep => <SelectItem key={dep.id} value={dep.name}>{dep.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, BookOpen, FileSignature, Laptop, HeartHandshake, Trash2, Edit } from 'lucide-react';
@@ -20,21 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-
-interface Department {
-  name: string;
-  slug: string;
-  Icon: LucideIcon;
-  email: string;
-  phone: string;
-}
-
-const initialDepartments: Department[] = [
-  { name: 'Academics Office', slug: 'academics-office', Icon: BookOpen, email: 'academics@nbsc.edu.ph', phone: '(012) 345-6789' },
-  { name: 'Registrar\'s Office', slug: 'registrars-office', Icon: FileSignature, email: 'registrar@nbsc.edu.ph', phone: '(012) 345-6780' },
-  { name: 'IT Services', slug: 'it-services', Icon: Laptop, email: 'itservices@nbsc.edu.ph', phone: '(012) 345-6781' },
-  { name: 'Student Affairs', slug: 'student-affairs', Icon: HeartHandshake, email: 'student.affairs@nbsc.edu.ph', phone: '(012) 345-6782' },
-];
+import { subscribeToDepartments, addDepartment, updateDepartment, deleteDepartment, Department, seedDepartments } from '@/services/departments';
 
 const ICONS: Record<string, LucideIcon> = {
     BookOpen,
@@ -45,36 +31,51 @@ const ICONS: Record<string, LucideIcon> = {
 
 const slugify = (text: string) => text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '');
 
+const DepartmentIcon = ({ iconName }: { iconName: string }) => {
+    const Icon = ICONS[iconName] || BookOpen;
+    return <Icon className="h-5 w-5 text-muted-foreground" />;
+};
+
 
 export default function AdminDepartmentsPage() {
     const { toast } = useToast();
-    const [departments, setDepartments] = useState<Department[]>(initialDepartments);
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
 
-    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    useEffect(() => {
+        seedDepartments(); // Seed initial data if collection is empty
+        const unsubscribe = subscribeToDepartments(setDepartments);
+        return () => unsubscribe();
+    }, []);
+
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         const name = formData.get('name') as string;
-        const newDepartment = {
+        const newDepartmentData = {
             name: name,
             slug: selectedDepartment ? selectedDepartment.slug : slugify(name),
-            Icon: BookOpen, // Default icon, can be improved with a selector
+            icon: 'BookOpen', // Default icon
             email: formData.get('email') as string,
             phone: formData.get('phone') as string,
+            description: formData.get('description') as string,
         };
 
-        if (selectedDepartment) {
-            setDepartments(departments.map(d => d.slug === selectedDepartment.slug ? newDepartment : d));
-            toast({ title: "Department Updated", description: "The department details have been successfully updated." });
-        } else {
-            setDepartments([newDepartment, ...departments]);
-            toast({ title: "Department Created", description: "The new department has been added." });
+        try {
+            if (selectedDepartment) {
+                await updateDepartment(selectedDepartment.id, newDepartmentData);
+                toast({ title: "Department Updated", description: "The department details have been successfully updated." });
+            } else {
+                await addDepartment(newDepartmentData);
+                toast({ title: "Department Created", description: "The new department has been added." });
+            }
+            setIsFormOpen(false);
+            setSelectedDepartment(null);
+        } catch (error) {
+            toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
         }
-        
-        setIsFormOpen(false);
-        setSelectedDepartment(null);
     };
 
     const handleEdit = (department: Department) => {
@@ -87,12 +88,16 @@ export default function AdminDepartmentsPage() {
         setIsDeleteConfirmOpen(true);
     };
 
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async () => {
         if (selectedDepartment) {
-            setDepartments(departments.filter(d => d.slug !== selectedDepartment.slug));
-            toast({ title: "Department Removed", variant: "destructive", description: "The department has been removed from the platform." });
-            setIsDeleteConfirmOpen(false);
-            setSelectedDepartment(null);
+            try {
+                await deleteDepartment(selectedDepartment.id);
+                toast({ title: "Department Removed", variant: "destructive", description: "The department has been removed from the platform." });
+                setIsDeleteConfirmOpen(false);
+                setSelectedDepartment(null);
+            } catch (error) {
+                toast({ title: "Error", description: "Could not remove department.", variant: "destructive" });
+            }
         }
     };
 
@@ -128,10 +133,10 @@ export default function AdminDepartmentsPage() {
                     </TableHeader>
                     <TableBody>
                         {departments.map((dept) => (
-                            <TableRow key={dept.slug}>
+                            <TableRow key={dept.id}>
                                 <TableCell className="font-medium">
                                     <div className="flex items-center gap-3">
-                                        <dept.Icon className="h-5 w-5 text-muted-foreground" />
+                                        <DepartmentIcon iconName={dept.icon} />
                                         {dept.name}
                                     </div>
                                 </TableCell>
@@ -170,6 +175,10 @@ export default function AdminDepartmentsPage() {
                         <div className="space-y-2">
                             <Label htmlFor="name">Department Name</Label>
                             <Input id="name" name="name" defaultValue={selectedDepartment?.name} required />
+                        </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Input id="description" name="description" defaultValue={selectedDepartment?.description} required />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="email">Email</Label>

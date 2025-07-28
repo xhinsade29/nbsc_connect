@@ -1,7 +1,7 @@
 import { Sidebar, SidebarContent, SidebarHeader, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { SidebarNav } from '@/components/layout/sidebar-nav';
 import { UserNav } from '@/components/layout/user-nav';
-import { Users } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AppLayout({
   children,
@@ -13,9 +13,13 @@ export default function AppLayout({
       <Sidebar>
         <SidebarHeader className="p-4">
             <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-                    <Users className="h-6 w-6 text-primary-foreground" />
-                </div>
+                <Image 
+                    src="https://nbsc.edu.ph/wp-content/uploads/2021/01/NBSC-Logo-1.png"
+                    alt="NBSC Logo"
+                    width={40}
+                    height={40}
+                    className="rounded-lg"
+                />
                 <h1 className="font-headline text-xl font-bold text-primary group-data-[collapsible=icon]:hidden">
                     NBSC Connect
                 </h1>

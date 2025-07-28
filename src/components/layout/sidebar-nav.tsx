@@ -1,41 +1,44 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarMenuBadge } from '@/components/ui/sidebar';
 import { LayoutDashboard, Building2, Bot, Bell, MessageSquare } from 'lucide-react';
 import Link from 'next/link';
+import { useNotifications } from '@/context/notifications-context';
+import { useMessages } from '@/context/messages-context';
 
-// NOTE: In a real application, this state would be managed globally (e.g., via Context or Zustand)
-// to allow other components to update the notification counts.
 const initialLinks = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, notifications: 0 },
-  { href: '/departments', label: 'Departments', icon: Building2, notifications: 0 },
-  { href: '/inquiry', label: 'Inquiry Tool', icon: Bot, notifications: 0 },
-  { href: '/notifications', label: 'Notifications', icon: Bell, notifications: 2 },
-  { href: '/messages', label: 'Messages', icon: MessageSquare, notifications: 1 },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/departments', label: 'Departments', icon: Building2 },
+  { href: '/inquiry', label: 'Inquiry Tool', icon: Bot },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
+  { href: '/messages', label: 'Messages', icon: MessageSquare },
 ];
 
 export function SidebarNav() {
   const pathname = usePathname();
-  const [links, setLinks] = useState(initialLinks);
+  const { notifications } = useNotifications();
+  const { conversations } = useMessages();
+  
+  const notificationCount = notifications.announcements.filter(n => !n.read).length + notifications.inquiries.filter(n => !n.read).length;
+  const messageCount = conversations.reduce((sum, convo) => sum + convo.unread, 0);
 
-  const handleLinkClick = (href: string) => {
-    // This is a local state update. For a real app, you'd trigger a global state update.
-    const updatedLinks = links.map(link => {
-      if (link.href === href) {
-        return { ...link, notifications: 0 };
-      }
-      return link;
-    });
-    setLinks(updatedLinks);
-  };
+  const links = initialLinks.map(link => {
+    let notifications = 0;
+    if (link.href === '/notifications') {
+      notifications = notificationCount;
+    } else if (link.href === '/messages') {
+      notifications = messageCount;
+    }
+    return { ...link, notifications };
+  });
 
   return (
     <SidebarMenu>
       {links.map((link) => (
-        <SidebarMenuItem key={link.href} onClick={() => handleLinkClick(link.href)}>
+        <SidebarMenuItem key={link.href}>
           <SidebarMenuButton
             asChild
             isActive={pathname.startsWith(link.href)}

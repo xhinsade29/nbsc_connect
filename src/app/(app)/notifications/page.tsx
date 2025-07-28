@@ -16,89 +16,25 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-
-interface NotificationItem {
-    id: number;
-    uniqueId: string;
-    type: 'announcement' | 'inquiry';
-    title: string;
-    department: string;
-    date: string;
-    read: boolean;
-    description: string;
-}
-
-const initialNotificationsData = {
-    announcements: [
-        {
-            id: 1,
-            type: 'announcement' as const,
-            title: 'New Grade Policy',
-            department: 'Academics Office',
-            date: '2 hours ago',
-            read: false,
-            description: 'A new grading policy has been implemented for the current semester. All students are advised to review the updated guidelines in the student handbook available on the portal.',
-        },
-        {
-            id: 2,
-            type: 'announcement' as const,
-            title: 'Campus-wide WiFi Upgrade',
-            department: 'IT Services',
-            date: '1 day ago',
-            read: true,
-            description: 'The campus WiFi network will be undergoing a scheduled upgrade on October 30th from 2 AM to 5 AM. Expect intermittent connectivity during this period.',
-        }
-    ],
-    inquiries: [
-        {
-            id: 1,
-            type: 'inquiry' as const,
-            title: 'Re: Question about enrollment',
-            department: 'Registrar\'s Office',
-            date: '3 hours ago',
-            read: false,
-            description: 'Your enrollment for the upcoming semester has been confirmed. You can view your schedule and assessment in the student portal.',
-        },
-        {
-            id: 2,
-            type: 'inquiry'as const,
-            title: 'Re: Technical issue with student portal',
-            department: 'IT Services',
-            date: '2 days ago',
-            read: true,
-            description: 'The technical issue with the student portal has been resolved. Please clear your browser cache and try logging in again. Let us know if the problem persists.',
-        }
-    ]
-};
+import { useNotifications, NotificationItem } from '@/context/notifications-context';
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState(initialNotificationsData);
+  const { notifications, markNotificationAsRead } = useNotifications();
   const [selectedNotification, setSelectedNotification] = useState<NotificationItem | null>(null);
 
   const handleNotificationClick = (notification: NotificationItem) => {
     setSelectedNotification(notification);
-
     if (!notification.read) {
-        if (notification.type === 'announcement') {
-            setNotifications(prev => ({
-                ...prev,
-                announcements: prev.announcements.map(n => n.id === notification.id ? { ...n, read: true } : n)
-            }));
-        } else {
-            setNotifications(prev => ({
-                ...prev,
-                inquiries: prev.inquiries.map(n => n.id === notification.id ? { ...n, read: true } : n)
-            }));
-        }
+      markNotificationAsRead(notification.uniqueId);
     }
   };
 
   const unreadAnnouncements = notifications.announcements.filter(n => !n.read).length;
   const unreadInquiries = notifications.inquiries.filter(n => !n.read).length;
 
-  const allNotifications: NotificationItem[] = [
-      ...notifications.announcements.map(a => ({...a, uniqueId: `announcement-${a.id}`})),
-      ...notifications.inquiries.map(i => ({...i, uniqueId: `inquiry-${i.id}`}))
+  const allNotifications = [
+      ...notifications.announcements,
+      ...notifications.inquiries
   ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // This is a mock sort, proper date parsing is needed for real usage
 
   return (
@@ -140,14 +76,14 @@ export default function NotificationsPage() {
             <TabsContent value="announcements" className="mt-6">
                 <NotificationList 
                     title="Announcements" 
-                    items={notifications.announcements.map(a => ({...a, uniqueId: `announcement-${a.id}`}))} 
+                    items={notifications.announcements} 
                     onNotificationClick={handleNotificationClick}
                 />
             </TabsContent>
             <TabsContent value="inquiries" className="mt-6">
                 <NotificationList 
                     title="Inquiry Responses" 
-                    items={notifications.inquiries.map(i => ({...i, uniqueId: `inquiry-${i.id}`}))}
+                    items={notifications.inquiries}
                     onNotificationClick={handleNotificationClick}
                 />
             </TabsContent>

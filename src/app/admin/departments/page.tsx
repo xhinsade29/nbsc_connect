@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { subscribeToDepartments, addDepartment, updateDepartment, deleteDepartment, Department, seedDepartments } from '@/services/departments';
+import { subscribeToDepartments, addDepartment, updateDepartment, deleteDepartment, Department } from '@/services/departments';
 
 const ICONS: Record<string, LucideIcon> = {
     BookOpen,
@@ -46,7 +46,6 @@ export default function AdminDepartmentsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        seedDepartments(); // Seed initial data if collection is empty
         const unsubscribe = subscribeToDepartments(setDepartments);
         return () => unsubscribe();
     }, []);

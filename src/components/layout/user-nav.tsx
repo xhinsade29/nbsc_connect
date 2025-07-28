@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -41,10 +42,10 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/profile')}>
             Profile
           </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push('/settings')}>
             Settings
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, MoreHorizontal, Trash2, Edit, View } from 'lucide-react';
@@ -22,21 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-
-interface Announcement {
-    id: number;
-    title: string;
-    category: 'Academics' | 'Event' | 'Announcement';
-    department: string;
-    date: string;
-    description: string;
-}
-
-const initialAnnouncements: Announcement[] = [
-    { id: 1, title: 'Midterm Examinations Schedule', category: 'Academics', department: 'Academics Office', date: 'October 25, 2024', description: 'The schedule for the upcoming midterm examinations has been released.' },
-    { id: 2, title: 'NBSC Foundation Day Celebration', category: 'Event', department: 'Student Affairs', date: 'October 22, 2024', description: 'Join us in celebrating our 42nd Foundation Day!' },
-    { id: 3, title: 'System Maintenance Alert', category: 'Announcement', department: 'IT Services', date: 'October 20, 2024', description: 'The student portal will be temporarily unavailable for maintenance.' },
-];
+import { subscribeToAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, Announcement } from '@/services/announcements';
 
 const departments = [
   'Academics Office',
@@ -47,34 +33,44 @@ const departments = [
 
 export default function AdminAnnouncementsPage() {
     const { toast } = useToast();
-    const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
     const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
 
-    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    useEffect(() => {
+        const unsubscribe = subscribeToAnnouncements(setAnnouncements);
+        return () => unsubscribe();
+    }, []);
+
+    const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
-        const newAnnouncement = {
-            id: selectedAnnouncement ? selectedAnnouncement.id : Date.now(),
+        const announcementData = {
             title: formData.get('title') as string,
             category: formData.get('category') as 'Academics' | 'Event' | 'Announcement',
             department: formData.get('department') as string,
             date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
             description: formData.get('description') as string,
+            image: 'https://placehold.co/600x400.png', // Default image for now
+            dataAiHint: 'school event', // Default hint
         };
 
-        if (selectedAnnouncement) {
-            setAnnouncements(announcements.map(a => a.id === selectedAnnouncement.id ? newAnnouncement : a));
-            toast({ title: "Announcement Updated", description: "The announcement has been successfully updated." });
-        } else {
-            setAnnouncements([newAnnouncement, ...announcements]);
-            toast({ title: "Announcement Created", description: "The new announcement has been posted." });
+        try {
+            if (selectedAnnouncement) {
+                await updateAnnouncement(selectedAnnouncement.id, announcementData);
+                toast({ title: "Announcement Updated", description: "The announcement has been successfully updated." });
+            } else {
+                await addAnnouncement(announcementData);
+                toast({ title: "Announcement Created", description: "The new announcement has been posted." });
+            }
+            
+            setIsFormOpen(false);
+            setSelectedAnnouncement(null);
+        } catch (error) {
+            toast({ title: "Error", description: "Something went wrong.", variant: "destructive" });
         }
-        
-        setIsFormOpen(false);
-        setSelectedAnnouncement(null);
     };
 
     const handleEdit = (announcement: Announcement) => {
@@ -92,12 +88,16 @@ export default function AdminAnnouncementsPage() {
         setIsDeleteConfirmOpen(true);
     };
     
-    const handleDeleteConfirm = () => {
+    const handleDeleteConfirm = async () => {
         if (selectedAnnouncement) {
-            setAnnouncements(announcements.filter(a => a.id !== selectedAnnouncement.id));
-            toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
-            setIsDeleteConfirmOpen(false);
-            setSelectedAnnouncement(null);
+            try {
+                await deleteAnnouncement(selectedAnnouncement.id);
+                toast({ title: "Announcement Deleted", variant: "destructive", description: "The announcement has been removed." });
+                setIsDeleteConfirmOpen(false);
+                setSelectedAnnouncement(null);
+            } catch (error) {
+                 toast({ title: "Error", description: "Could not delete announcement.", variant: "destructive" });
+            }
         }
     };
 
